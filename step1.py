@@ -4,8 +4,7 @@
 import cv2
 import numpy as np
 
-color = [(255,0,0), (0,255,0), (0,0,255)]
-results = np.array([])
+results=[]
 
 def positive(value):
     if value < 0:
@@ -27,18 +26,20 @@ i = 4
 # We load the base image, against which other images will be tested
 base = cv2.imread("i" + str(i) + ".ppm")
 
-histbase = cv2.calcHist(base, [0,1,2], None, [32,32,32], [10, 256, 10, 256, 10, 256])
+histbase = cv2.calcHist(base, [0,1,2], None, [8,8,8], [10, 256, 10, 256, 10, 256])
 cv2.normalize(histbase, histbase, 0, 255, cv2.NORM_MINMAX)
-for j in range(1, 40):
-    if i == j:
-        continue
+for j in range(1, 41):
+    #if i == j:
+    #    continue
     test = cv2.imread("i" + str(j) + ".ppm")
-    histtest = cv2.calcHist(test, [0,1,2], None, [32,32,32], [10, 256, 10, 256, 10, 256])
+    histtest = cv2.calcHist(test, [0,1,2], None, [8,8,8], [10, 256, 10, 256, 10, 256])
     cv2.normalize(histtest, histtest, 0, 255, cv2.NORM_MINMAX)
-    np.append(results, comparehist(histbase,histtest))
-    cv2.normalize(results,results,0,1,cv2.NORM_L1)
-    # print "Image " + str(j) + ": " + str(result)
+    results.append(comparehist(histbase,histtest))
 print results
+npres = np.array(results)
+cv2.normalize(npres,npres,0,1,cv2.NORM_MINMAX)
+    # print "Image " + str(j) + ": " + str(result)
+
 
 
 #print result
