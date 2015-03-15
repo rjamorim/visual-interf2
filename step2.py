@@ -1,4 +1,4 @@
-# Visual Interfaces Spring 2015 Assignment 1 - Step 1
+# Visual Interfaces Spring 2015 Assignment 1 - Step 2
 # Roberto Amorim - rja2139
 
 import cv2
@@ -19,11 +19,9 @@ def positive(value):
 def comparehist(hist1, hist2):
     total_distance = 0
     for i in range (0, len(hist1)):
-        for j in range (0, len(hist1[i])):
-            for k in range (0, len(hist1[i][j])):
-                total_distance += positive(hist1[i][j][k] - hist2[i][j][k])
+        total_distance += positive(hist1[i] - hist2[i])
     # As mentioned in https://piazza.com/class/i51cy8jip6425j?cid=95
-    res = total_distance / 2 / (89 * 60)
+    res = total_distance / (89 * 60)
     return res
 
 
@@ -50,20 +48,25 @@ def plot(results):
     print "Drew plot: " + str(results[0])
 
 
+ddepth = cv2.CV_16S
 for i in range(1, 41):
     results = []
     # We load the base image, against which other images will be tested
     base = cv2.imread("i" + str(i) + ".ppm")
-    # Histogram generation is done in 3D fashion (one dimension for each color channel)
-    # Color range is calculated to be from intensity 10 to 255, so at to eliminate darker
-    # backgrounds (in the range 0 - 9)
-    histbase = cv2.calcHist(base, [0, 1, 2], None, [4,4,4], [10, 255, 10, 255, 10, 255])
-    # The histogram gets normalized so that each value ranges from 0 to 255
-    cv2.normalize(histbase, histbase, 0, 255, cv2.NORM_MINMAX)
+    # We apply a soft gaussian blur to make edges more uniform
+    base = cv2.GaussianBlur(base, (3, 3), 0)
+    # Now the image gets converted for grayscale
+    graybase = cv2.cvtColor(base, cv2.COLOR_BGR2GRAY)
+    # Now we generate the laplacian of the image
+    baselapl = cv2.Laplacian(graybase, ddepth, 1, scale = 0,delta = 0)
+    # And finally, the histogram is generated.
+    histbase = cv2.calcHist(baselapl, [0], None, [8], [0, 255])
     for j in range(1, 41):
         test = cv2.imread("i" + str(j) + ".ppm")
-        histtest = cv2.calcHist(test, [0, 1, 2], None, [4,4,4], [10, 255, 10, 255, 10, 255])
-        cv2.normalize(histtest, histtest, 0, 255, cv2.NORM_MINMAX)
+        test = cv2.GaussianBlur(test, (3, 3), 0)
+        graytest = cv2.cvtColor(test, cv2.COLOR_BGR2GRAY)
+        testlapl = cv2.Laplacian(graytest, ddepth, 1, scale = 0,delta = 0)
+        histtest = cv2.calcHist(testlapl, [0], None, [8], [0, 255])
         results.append(comparehist(histbase, histtest))
     npresults = np.array(results)
     # The results get normalized to a range from 0 to 1, 0 meaning total correlation and 1 meaning the
