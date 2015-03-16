@@ -50,6 +50,7 @@ def plot(results):
     print "Drew plot: " + str(results[0])
 
 
+bins = 16
 for i in range(1, 41):
     results = []
     # We load the base image, against which other images will be tested
@@ -57,12 +58,12 @@ for i in range(1, 41):
     # Histogram generation is done in 3D fashion (one dimension for each color channel)
     # Color range is calculated to be from intensity 10 to 255, so at to eliminate darker
     # backgrounds (in the range 0 - 9)
-    histbase = cv2.calcHist(base, [0, 1, 2], None, [4,4,4], [10, 255, 10, 255, 10, 255])
+    histbase = cv2.calcHist(base, [0, 1, 2], None, [bins,bins,bins], [10, 255, 10, 255, 10, 255])
     # The histogram gets normalized so that each value ranges from 0 to 255
     cv2.normalize(histbase, histbase, 0, 255, cv2.NORM_MINMAX)
     for j in range(1, 41):
         test = cv2.imread("i" + str(j) + ".ppm")
-        histtest = cv2.calcHist(test, [0, 1, 2], None, [4,4,4], [10, 255, 10, 255, 10, 255])
+        histtest = cv2.calcHist(test, [0, 1, 2], None, [bins,bins,bins], [10, 255, 10, 255, 10, 255])
         cv2.normalize(histtest, histtest, 0, 255, cv2.NORM_MINMAX)
         results.append(comparehist(histbase, histtest))
     npresults = np.array(results)

@@ -41,32 +41,34 @@ def plot(results):
         photo = Image.open("i" + str(results[i][1]) + ".ppm")
         plot.paste(photo, (x, 20))
         draw.text((x+10, 90), "i" + str(results[i][1]) + ".ppm", font=fnt, fill=(0, 0, 0, 255))
-        draw.text((x+10, 110), "{0:.4f}".format(results[i][0]), font=fnt, fill=(0, 0, 0, 255))
+        draw.text((x+10, 110), "{0:.4f}".format(float(results[i][0])), font=fnt, fill=(0, 0, 0, 255))
     plot = Image.alpha_composite(plot, txt)
-    plot.save("color_results_" + str(results[0]) + ".png")
+    plot.save("texture_results_" + str(results[0]) + ".png")
 
     print "Drew plot: " + str(results[0])
 
 
+bins = 64
 ddepth = cv2.CV_16S
 for i in range(1, 41):
     results = []
     # We load the base image, against which other images will be tested
     base = cv2.imread("i" + str(i) + ".ppm")
-    # We apply a soft gaussian blur to make edges more uniform
-    base = cv2.GaussianBlur(base, (3, 3), 0)
     # Now the image gets converted for grayscale
-    graybase = cv2.cvtColor(base, cv2.COLOR_BGR2GRAY)
+    graybase = cv2.cvtColor(base, cv2.COLOR_RGB2GRAY)
     # Now we generate the laplacian of the image
-    baselapl = cv2.Laplacian(graybase, ddepth, 1, scale = 0,delta = 0)
+    baselapl = cv2.Laplacian(graybase, ddepth, 1, scale = 1,delta = 0)
+    # We did the laplacian returning an image of datatype cv2.CV_16S. For it to be processed by the
+    # histogram filter, we must convert it back to cv2.CV_8U
+    baselapl = cv2.convertScaleAbs(baselapl)
     # And finally, the histogram is generated.
-    histbase = cv2.calcHist(baselapl, [0], None, [8], [0, 255])
+    histbase = cv2.calcHist(baselapl, [0], None, [bins], [0, 255])
     for j in range(1, 41):
         test = cv2.imread("i" + str(j) + ".ppm")
-        test = cv2.GaussianBlur(test, (3, 3), 0)
-        graytest = cv2.cvtColor(test, cv2.COLOR_BGR2GRAY)
-        testlapl = cv2.Laplacian(graytest, ddepth, 1, scale = 0,delta = 0)
-        histtest = cv2.calcHist(testlapl, [0], None, [8], [0, 255])
+        graytest = cv2.cvtColor(test, cv2.COLOR_RGB2GRAY)
+        testlapl = cv2.Laplacian(graytest, ddepth, 1, scale = 1,delta = 0)
+        testlapl = cv2.convertScaleAbs(testlapl)
+        histtest = cv2.calcHist(testlapl, [0], None, [bins], [0, 255])
         results.append(comparehist(histbase, histtest))
     npresults = np.array(results)
     # The results get normalized to a range from 0 to 1, 0 meaning total correlation and 1 meaning the
