@@ -23,7 +23,7 @@ def comparehist(hist1, hist2):
             for k in range (0, len(hist1[i][j])):
                 total_distance += positive(hist1[i][j][k] - hist2[i][j][k])
     # As mentioned in https://piazza.com/class/i51cy8jip6425j?cid=95
-    res = total_distance / 2 / (89 * 60)
+    res = total_distance / (2 * 89 * 60)
     return res
 
 
@@ -49,8 +49,8 @@ def plot(results):
     print "Drew plot: " + str(results[0])
 
 
-bins = 4
-for i in range(1, 41):
+bins = 16
+for i in range(1, 2):
     results = []
     # We load the base image, against which other images will be tested
     base = cv2.imread("i" + str(i) + ".ppm")
@@ -66,6 +66,7 @@ for i in range(1, 41):
         #cv2.normalize(histtest, histtest, 0, 255, cv2.NORM_MINMAX)
         results.append(comparehist(histbase, histtest))
     npresults = np.array(results)
+    print results
     # The results get normalized to a range from 0 to 1, 0 meaning total correlation and 1 meaning the
     # image most dissimilar to the base
     cv2.normalize(npresults, npresults, 0, 1, cv2.NORM_MINMAX)
@@ -78,6 +79,6 @@ for i in range(1, 41):
 
     # here we mount an array with the image indexes in 7 positions:
     # the base, the three most similar and the three least similar
-    result = [i, sort[38], sort[37], sort[36], sort[2], sort[1], sort[0]]
+    result = [i, sort[38], sort[37], sort[36], sort[0], sort[1], sort[2]]
 
     plot(result)

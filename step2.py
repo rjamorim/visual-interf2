@@ -21,7 +21,7 @@ def comparehist(hist1, hist2):
     for i in range (0, len(hist1)):
         total_distance += positive(hist1[i] - hist2[i])
     # As mentioned in https://piazza.com/class/i51cy8jip6425j?cid=95
-    res = total_distance / (89 * 60)
+    res = total_distance / 2 * (89 * 60)
     return res
 
 
@@ -82,13 +82,13 @@ def laplacian(im):
     laplace[h-1][0] = (image[h-1][0] * 3) - image[h-1][1] - image[h-2][0] - image[h-2][1]
     laplace[h-1][w-1] = (image[h-1][w-1] * 3) - image[h-1][w-2] - image[h-2][w-2] - image[h-2][w-1]
 
-    npresults = np.array(laplace)
+    res = np.array(laplace)
     # The pixels end up in the range [-255, 255]. So we normalize the values to stay in the range [0, 255]
-    cv2.normalize(npresults, npresults, 0, 255, cv2.NORM_MINMAX)
-    return npresults
+    cv2.normalize(res, res, 0, 255, cv2.NORM_MINMAX)
+    return res
 
 
-bins = 8
+bins = 16
 ddepth = cv2.CV_16S
 for i in range(1, 41):
     results = []
@@ -120,6 +120,6 @@ for i in range(1, 41):
 
     # here we mount an array with the image indexes in 7 positions:
     # the base, the three most similar and the three least similar
-    result = [i, sort[38], sort[37], sort[36], sort[2], sort[1], sort[0]]
+    result = [i, sort[38], sort[37], sort[36], sort[0], sort[1], sort[2]]
 
     plot(result)
