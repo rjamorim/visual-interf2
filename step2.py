@@ -30,7 +30,7 @@ def comparehist(hist1, hist2):
 def plot(results):
     x = 20
     fnt = ImageFont.truetype('calibrib.ttf', 18)
-    plot = Image.new('RGBA', (740, 140), (200, 200, 200, 255))
+    plot = Image.new('RGBA', (740, 120), (200, 200, 200, 255))
     txt = Image.new('RGBA', plot.size, (255, 255, 255, 0))
     draw = ImageDraw.Draw(txt)
     photo = Image.open("i" + str(results[0]) + ".ppm")
@@ -41,14 +41,54 @@ def plot(results):
         photo = Image.open("i" + str(results[i][1]) + ".ppm")
         plot.paste(photo, (x, 20))
         draw.text((x+10, 90), "i" + str(results[i][1]) + ".ppm", font=fnt, fill=(0, 0, 0, 255))
-        draw.text((x+10, 110), "{0:.4f}".format(float(results[i][0])), font=fnt, fill=(0, 0, 0, 255))
     plot = Image.alpha_composite(plot, txt)
     plot.save("texture_results_" + str(results[0]) + ".png")
 
     print "Drew plot: " + str(results[0])
 
 
-bins = 64
+# The function that generates a laplacian image
+def laplacian(im):
+    w, h = im.size
+    image = np.array(im, dtype='int32')
+    laplace = [[0 for i in range(w)] for j in range(h)]
+    # First we deal with all the pixels that are not in the edge
+    for i in range(1, h-2):
+        for j in range(1, w-2):
+            upper_row = image[i-1][j-1] + image[i-1][j] + image[i-1][j+1]
+            middle_row = image[i][j-1] + image[i][j+1]
+            lower_row = image[i+1][j-1] + image[i+1][j] + image[i+1][j+1]
+            laplace[i][j] = (image[i][j] * 8) - upper_row - middle_row - lower_row
+    # We worked on the center of the image, now we must work on the borders
+    for j in range(1, w-1):
+        middle_row = image[0][j-1] + image[0][j+1]
+        lower_row = image[1][j-1] + image[1][j] + image[1][j+1]
+        laplace[0][j] = (image[0][j] * 5) - middle_row - lower_row
+        upper_row = image[h-2][j-1] + image[h-2][j] + image[h-2][j+1]
+        middle_row = image[h-1][j-1] + image[h-1][j+1]
+        laplace[h-1][j] = (image[h-1][j] * 5) - upper_row - middle_row
+    for i in range(1, h-1):
+        upper_row = image[i-1][0] + image[i-1][1]
+        middle_row = image[i][1]
+        lower_row = image[i+1][0] + image[i+1][1]
+        laplace[i][j] = (image[i][j] * 5) - upper_row - middle_row - lower_row
+        upper_row = image[i-1][w-2] + image[i-1][w-1]
+        middle_row = image[i][w-1]
+        lower_row = image[i+1][w-2] + image[i+1][w-1]
+        laplace[i][j] = (image[i][j] * 5) - upper_row - middle_row - lower_row
+    # And now the corners
+    laplace[0][0] = (image[0][0] * 3) - image[0][1] - image[1][0] - image[1][1]
+    laplace[0][w-1] = (image[0][w-1] * 3) - image[0][w-2] - image[1][w-2] - image[1][w-1]
+    laplace[h-1][0] = (image[h-1][0] * 3) - image[h-1][1] - image[h-2][0] - image[h-2][1]
+    laplace[h-1][w-1] = (image[h-1][w-1] * 3) - image[h-1][w-2] - image[h-2][w-2] - image[h-2][w-1]
+
+    npresults = np.array(laplace)
+    # The pixels end up in the range [-255, 255]. So we normalize the values to stay in the range [0, 255]
+    cv2.normalize(npresults, npresults, 0, 255, cv2.NORM_MINMAX)
+    return npresults
+
+
+bins = 8
 ddepth = cv2.CV_16S
 for i in range(1, 41):
     results = []
@@ -57,10 +97,7 @@ for i in range(1, 41):
     # Now the image gets converted for grayscale
     graybase = cv2.cvtColor(base, cv2.COLOR_RGB2GRAY)
     # Now we generate the laplacian of the image
-    baselapl = cv2.Laplacian(graybase, ddepth, 1, scale = 1,delta = 0)
-    # We did the laplacian returning an image of datatype cv2.CV_16S. For it to be processed by the
-    # histogram filter, we must convert it back to cv2.CV_8U
-    baselapl = cv2.convertScaleAbs(baselapl)
+    baselapl = laplacian(graybase)
     # And finally, the histogram is generated.
     histbase = cv2.calcHist(baselapl, [0], None, [bins], [0, 255])
     for j in range(1, 41):

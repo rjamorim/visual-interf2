@@ -32,25 +32,24 @@ def comparehist(hist1, hist2):
 def plot(results):
     x = 20
     fnt = ImageFont.truetype('calibrib.ttf', 18)
-    plot = Image.new('RGBA', (740, 140), (200, 200, 200, 255))
+    plot = Image.new('RGBA', (740, 120), (200, 200, 200, 255))
     txt = Image.new('RGBA', plot.size, (255, 255, 255, 0))
     draw = ImageDraw.Draw(txt)
     photo = Image.open("i" + str(results[0]) + ".ppm")
     plot.paste(photo, (x, 20))
-    draw.text((x+10,90), "i" + str(results[0]) + ".ppm", font=fnt, fill=(0,0,0,255))
-    for i in range (1, len(results)):
+    draw.text((x+10, 90), "i" + str(results[0]) + ".ppm", font=fnt, fill=(0,0,0,255))
+    for i in range(1, len(results)):
         x += 100
         photo = Image.open("i" + str(results[i][1]) + ".ppm")
         plot.paste(photo, (x, 20))
         draw.text((x+10, 90), "i" + str(results[i][1]) + ".ppm", font=fnt, fill=(0, 0, 0, 255))
-        draw.text((x+10, 110), "{0:.4f}".format(results[i][0]), font=fnt, fill=(0, 0, 0, 255))
     plot = Image.alpha_composite(plot, txt)
     plot.save("color_results_" + str(results[0]) + ".png")
 
     print "Drew plot: " + str(results[0])
 
 
-bins = 16
+bins = 4
 for i in range(1, 41):
     results = []
     # We load the base image, against which other images will be tested
@@ -58,13 +57,13 @@ for i in range(1, 41):
     # Histogram generation is done in 3D fashion (one dimension for each color channel)
     # Color range is calculated to be from intensity 10 to 255, so at to eliminate darker
     # backgrounds (in the range 0 - 9)
-    histbase = cv2.calcHist(base, [0, 1, 2], None, [bins,bins,bins], [10, 255, 10, 255, 10, 255])
+    histbase = cv2.calcHist(base, [0, 1, 2], None, [bins, bins, bins], [10, 255, 10, 255, 10, 255])
     # The histogram gets normalized so that each value ranges from 0 to 255
-    cv2.normalize(histbase, histbase, 0, 255, cv2.NORM_MINMAX)
+    #cv2.normalize(histbase, histbase, 0, 255, cv2.NORM_MINMAX)
     for j in range(1, 41):
         test = cv2.imread("i" + str(j) + ".ppm")
-        histtest = cv2.calcHist(test, [0, 1, 2], None, [bins,bins,bins], [10, 255, 10, 255, 10, 255])
-        cv2.normalize(histtest, histtest, 0, 255, cv2.NORM_MINMAX)
+        histtest = cv2.calcHist(test, [0, 1, 2], None, [bins, bins, bins], [10, 255, 10, 255, 10, 255])
+        #cv2.normalize(histtest, histtest, 0, 255, cv2.NORM_MINMAX)
         results.append(comparehist(histbase, histtest))
     npresults = np.array(results)
     # The results get normalized to a range from 0 to 1, 0 meaning total correlation and 1 meaning the
